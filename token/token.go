@@ -9,8 +9,8 @@ type Token struct {
 
 // we can define the possible TokenTypes as constants.
 const (
-	ILLEGAL TokenType = "ILLEGAL" // signifies a token/character we don’t know about
-	EOF     TokenType = "EOF"     //end of file”
+	ILLEGAL TokenType = "ILLEGAL" // signifies a token/character we don't know about
+	EOF     TokenType = "EOF"     //end of file"
 
 	// Identifiers + literals
 	IDENT TokenType = "IDENT" // add, foobar, x, y, ...
@@ -36,3 +36,15 @@ const (
 	FUNCTION TokenType = "FUNCTION"
 	LET      TokenType = "LET"
 )
+
+var keywords = map[string]TokenType{
+	"fn":  FUNCTION,
+	"let": LET,
+}
+
+func LookupIdent(ident string) TokenType {
+	if tok, ok := keywords[ident]; ok {
+		return tok
+	}
+	return IDENT
+}
