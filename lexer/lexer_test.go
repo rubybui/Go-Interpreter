@@ -40,12 +40,15 @@ func TestNextToken(t *testing.T) {
 	}
 }
 
-func testNextTokenToReadFunction(t *testing.T) {
+func TestNextTokenToReadFunction(t *testing.T) {
 	input := `let five = 5;
 	let ten = 10;
 	let add = fn(x, y) {
 		x + y;
 	};
+	let result = add(five, ten);
+	!-/*5;
+	5 < 10 > 5;
 	`
 	tests := []struct {
 		expectedType    token.TokenType
@@ -76,6 +79,16 @@ func testNextTokenToReadFunction(t *testing.T) {
 		{token.IDENT, "y"},
 		{token.SEMICOLON, ";"},
 		{token.RBRACE, "}"},
+		{token.SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "result"},
+		{token.ASSIGN, "="},
+		{token.IDENT, "add"},
+		{token.LPAREN, "("},
+		{token.IDENT, "five"},
+		{token.COMMA, ","},
+		{token.IDENT, "ten"},
+		{token.RPAREN, ")"},
 		{token.SEMICOLON, ";"},
 		{token.EOF, ""},
 	}

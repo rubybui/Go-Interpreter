@@ -107,7 +107,6 @@ func isDigit(ch byte) bool {
 func newToken(tokenType token.TokenType, ch byte) token.Token {
     return token.Token{Type: tokenType, Literal: string(ch)}
 }
-
 func (l *Lexer) skipWhitespace() {
     // skip over any whitespace characters in the input stream, skip newlines, tabs, and spaces
     for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
