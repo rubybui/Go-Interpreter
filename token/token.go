@@ -22,6 +22,9 @@ const (
 	MINUS    TokenType = "-"
 	ASTERISK TokenType = "*"
 	SLASH    TokenType = "/"
+	BANG     TokenType = "!"
+	LT       TokenType = "<"
+	GT       TokenType = ">"
 
 	// Delimiters
 	COMMA     TokenType = ","

@@ -21,16 +21,6 @@ func New(input string) *Lexer {
     return l
 }
 
-func (l *Lexer) readChar() {
-    if l.readPosition >= len(l.input) {
-        l.ch = 0
-    } else {
-        l.ch = l.input[l.readPosition]
-    }
-    l.position = l.readPosition
-    l.readPosition += 1
-}
-
 func (l *Lexer) NextToken() token.Token {
     var tok token.Token
     l.skipWhitespace()
@@ -53,6 +43,12 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.SLASH, l.ch)
 	case '*':
 		tok = newToken(token.ASTERISK, l.ch)
+    case '<':
+        tok = newToken(token.LT, l.ch)
+    case '>':
+        tok = newToken(token.GT, l.ch)
+    case '!':
+        tok = newToken(token.BANG, l.ch)
     case '{':
         tok = newToken(token.LBRACE, l.ch)
     case '}':
@@ -88,6 +84,17 @@ func (l *Lexer) readIdentifier() string {
     }
     return l.input[position:l.position]
 }
+
+func (l *Lexer) readChar() {
+    if l.readPosition >= len(l.input) {
+        l.ch = 0
+    } else {
+        l.ch = l.input[l.readPosition]
+    }
+    l.position = l.readPosition
+    l.readPosition += 1
+}
+
 func isLetter(ch byte) bool { 
     // check if the character is an ascii letter, underscore, 
     return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
@@ -100,6 +107,8 @@ func (l *Lexer) readNumber() string {
     }
     return l.input[position:l.position]
 }
+
+
 
 func isDigit(ch byte) bool {
     return '0' <= ch && ch <= '9'
