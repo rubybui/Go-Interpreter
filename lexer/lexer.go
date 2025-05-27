@@ -26,7 +26,14 @@ func (l *Lexer) NextToken() token.Token {
     l.skipWhitespace()
     switch l.ch {
     case '=':
+        if l.peekChar() == '=' {
+            ch:= l.ch
+            l.readChar()
+            literal := string(ch) + string(l.ch)
+            tok = token.Token{Type: token.EQ, Literal: literal}
+        } else {
         tok = newToken(token.ASSIGN, l.ch)
+        }
     case ';':
         tok = newToken(token.SEMICOLON, l.ch)
     case '(':
@@ -48,7 +55,14 @@ func (l *Lexer) NextToken() token.Token {
     case '>':
         tok = newToken(token.GT, l.ch)
     case '!':
-        tok = newToken(token.BANG, l.ch)
+        if l.peekChar() == '=' {
+            ch := l.ch
+            l.readChar()
+            literal := string(ch) + string(l.ch)
+            tok = token.Token{Type: token.NOT_EQ, Literal: literal}
+        } else {
+            tok = newToken(token.BANG, l.ch)
+        }
     case '{':
         tok = newToken(token.LBRACE, l.ch)
     case '}':
@@ -63,7 +77,7 @@ func (l *Lexer) NextToken() token.Token {
             return tok
         // The early exit here, our return tok statement, is necessary because when calling
         // readIdentifier(), we call readChar() repeatedly and advance our readPosition and position
-        // fields past the last character of the current identifier. So we don’t need the call to readChar()
+        // fields past the last character of the current identifier. So we don't need the call to readChar()
         // after the switch statement again.
         } else if isDigit(l.ch) {
             tok.Literal = l.readNumber()
@@ -108,7 +122,13 @@ func (l *Lexer) readNumber() string {
     return l.input[position:l.position]
 }
 
-
+func (l *Lexer) peekChar() byte {
+    // peek at the immediately next character without advancing the lexer's position
+    if l.readPosition >= len(l.input) {
+        return 0
+    }
+    return l.input[l.readPosition]
+}
 
 func isDigit(ch byte) bool {
     return '0' <= ch && ch <= '9'
@@ -116,6 +136,7 @@ func isDigit(ch byte) bool {
 func newToken(tokenType token.TokenType, ch byte) token.Token {
     return token.Token{Type: tokenType, Literal: string(ch)}
 }
+
 func (l *Lexer) skipWhitespace() {
     // skip over any whitespace characters in the input stream, skip newlines, tabs, and spaces
     for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {

@@ -43,7 +43,8 @@ const (
 	RETURN   TokenType = "RETURN"
 	TRUE     TokenType = "TRUE"
 	FALSE    TokenType = "FALSE"
-
+	EQ       = "=="
+	NOT_EQ   = "!="
 
 )
 
