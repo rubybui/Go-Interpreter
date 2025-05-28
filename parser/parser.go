@@ -6,12 +6,16 @@ import (
 	"monkey/token"
 )
 
+// Parser represents a parser for the Monkey programming language.
+// It holds the lexer and current/peek tokens for parsing.
 type Parser struct {
 	lexer *lexer.Lexer
 	currentToken token.Token
 	peekToken token.Token
 }
 
+// New creates a new Parser instance with the given lexer.
+// It initializes the parser by reading the first two tokens.
 func New(lexer *lexer.Lexer) *Parser {
 	p := &Parser{lexer: lexer}
 
@@ -21,11 +25,16 @@ func New(lexer *lexer.Lexer) *Parser {
 	return p
 }
 
+// nextToken advances the parser by setting the current token to the peek token
+// and reading the next token from the lexer.
 func (p *Parser) nextToken() {
 	p.currentToken = p.peekToken
 	p.peekToken = p.lexer.NextToken()
 }
 
+// ParseProgram parses the entire program and returns an AST.
+// It iterates through all tokens until EOF, parsing each statement
+// and adding it to the program's statement list.
 func (p *Parser) ParseProgram() *ast.Program {
 	program := &ast.Program{}
 	program.Statements = []ast.Statement{}
@@ -41,6 +50,8 @@ func (p *Parser) ParseProgram() *ast.Program {
 	return program
 }
 
+// parseStatement determines the type of statement to parse based on the current token.
+// Currently only handles LET statements, returns nil for other token types.
 func (p *Parser) parseStatement() ast.Statement {
 	switch p.currentToken.Type {
 	case token.LET:
@@ -50,6 +61,9 @@ func (p *Parser) parseStatement() ast.Statement {
 	}
 }
 
+// parseLetStatement parses a let statement in the format: let <identifier> = <expression>;
+// It constructs an AST node for the let statement, validates the identifier,
+// and expects an equals sign. Currently skips the expression parsing.
 func (p *Parser) parseLetStatement() *ast.LetStatement {
 	stmt := &ast.LetStatement{Token: p.currentToken}
 
@@ -72,14 +86,22 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	return stmt
 }
 
+// curTokenIs checks if the current token is of the specified type.
+// Helper method for token type checking.
 func (p *Parser) curTokenIs(t token.TokenType) bool {
 	return p.currentToken.Type == t
 }
 
+// peekTokenIs checks if the next token is of the specified type.
+// Helper method for looking ahead at the next token.
 func (p *Parser) peekTokenIs(t token.TokenType) bool {
 	return p.peekToken.Type == t
 }
 
+// expectPeek is an assertion function that checks if the next token is of the expected type.
+// If it is, it advances the tokens and returns true.
+// If not, it returns false, allowing the parser to handle the error.
+// This is a crucial method for enforcing the correct order of tokens in the input.
 func (p *Parser) expectPeek(t token.TokenType) bool {
 	if p.peekTokenIs(t) {
 		p.nextToken()
