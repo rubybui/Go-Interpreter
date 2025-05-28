@@ -4,6 +4,7 @@ import (
 	"monkey/ast"
 	"monkey/lexer"
 	"monkey/token"
+	"fmt"
 )
 
 // Parser represents a parser for the Monkey programming language.
@@ -12,12 +13,13 @@ type Parser struct {
 	lexer *lexer.Lexer
 	currentToken token.Token
 	peekToken token.Token
+	errors []string
 }
 
 // New creates a new Parser instance with the given lexer.
 // It initializes the parser by reading the first two tokens.
 func New(lexer *lexer.Lexer) *Parser {
-	p := &Parser{lexer: lexer}
+	p := &Parser{lexer: lexer, errors: []string{}}
 
 	p.nextToken()
 	p.nextToken()
@@ -32,6 +34,9 @@ func (p *Parser) nextToken() {
 	p.peekToken = p.lexer.NextToken()
 }
 
+func (p *Parser) Errors() []string {
+	return p.errors
+}
 // ParseProgram parses the entire program and returns an AST.
 // It iterates through all tokens until EOF, parsing each statement
 // and adding it to the program's statement list.
@@ -56,6 +61,8 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch p.currentToken.Type {
 	case token.LET:
 		return p.parseLetStatement()
+	case token.RETURN:
+		return p.parseReturnStatement()
 	default:
 		return nil
 	}
@@ -86,6 +93,25 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	return stmt
 }
 
+// parseReturnStatment parses a return statement in the format: return <expression>;
+// It constructs an AST  node for the return statement
+// Currently skips the expression parsing.
+func  (p *Parser) parseReturnStatement() *ast.ReturnStatement {
+	stmt := &ast.ReturnStatement{Token: p.currentToken}
+
+	p.nextToken()
+
+
+	//TODO: parse expression
+
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return stmt
+
+}
+
 // curTokenIs checks if the current token is of the specified type.
 // Helper method for token type checking.
 func (p *Parser) curTokenIs(t token.TokenType) bool {
@@ -107,6 +133,13 @@ func (p *Parser) expectPeek(t token.TokenType) bool {
 		p.nextToken()
 		return true
 	} else {
+		p.peekError(t)
 		return false
 	}
+}
+
+func (p *Parser) peekError(t token.TokenType) {
+	msg := fmt.Sprintf("expected next token to be %s, got %s instead",
+		t, p.peekToken.Type)
+	p.errors = append(p.errors, msg)
 }
