@@ -6,6 +6,16 @@ import (
 	"monkey/token"
 	"fmt"
 )
+const (
+	_ int = iota
+	LOWEST
+	EQUALS // ==
+	LESSGREATER // > or <
+	SUM // +
+	PRODUCT // *
+	PREFIX // -X or !X
+	CALL // myFunction(X)
+	)
 
 // Parser represents a parser for the Monkey programming language.
 // It holds the lexer and current/peek tokens for parsing.
@@ -14,12 +24,17 @@ type Parser struct {
 	currentToken token.Token
 	peekToken token.Token
 	errors []string
+	prefixParseFns map[token.TokenType]prefixParseFn
+	infixParseFns map[token.TokenType]infixParseFn
 }
 
 // New creates a new Parser instance with the given lexer.
 // It initializes the parser by reading the first two tokens.
 func New(lexer *lexer.Lexer) *Parser {
 	p := &Parser{lexer: lexer, errors: []string{}}
+
+	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
+	p.registerPrefix(token.IDENT, p.parseIdentifier)
 
 	p.nextToken()
 	p.nextToken()
@@ -64,7 +79,7 @@ func (p *Parser) parseStatement() ast.Statement {
 	case token.RETURN:
 		return p.parseReturnStatement()
 	default:
-		return nil
+		return p.parseExpressionStatement()
 	}
 }
 
@@ -85,10 +100,9 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	}
 
 	//TODO: parse expression
-
-	if p.peekTokenIs(token.SEMICOLON) {
-		p.nextToken()
-	}
+    for !p.curTokenIs(token.SEMICOLON) {
+        p.nextToken()
+    }
 
 	return stmt
 }
@@ -104,12 +118,31 @@ func  (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 
 	//TODO: parse expression
 
-	if p.peekTokenIs(token.SEMICOLON) {
+	for !p.curTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
 
 	return stmt
 
+}
+
+func (p *Parser) parseExpression(precedence int) ast.Expression {
+	prefix := p.prefixParseFns[p.currentToken.Type]
+	if prefix == nil {
+		return nil
+	}
+	leftExp := prefix()
+	return leftExp
+}
+
+func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	stmt := &ast.ExpressionStatement{Token: p.currentToken}
+	stmt.Expression = p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+	return stmt
 }
 
 // curTokenIs checks if the current token is of the specified type.
@@ -142,4 +175,22 @@ func (p *Parser) peekError(t token.TokenType) {
 	msg := fmt.Sprintf("expected next token to be %s, got %s instead",
 		t, p.peekToken.Type)
 	p.errors = append(p.errors, msg)
+}
+
+type (
+	prefixParseFn func() ast.Expression
+	infixParseFn func(ast.Expression) ast.Expression
+)
+
+// Parser hleper method to add entries to prefixFns mapp and infixFns maps
+func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+	p.prefixParseFns[tokenType] = fn
+}
+
+func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+	p.infixParseFns[tokenType] = fn
+}
+
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
 }

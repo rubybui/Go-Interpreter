@@ -1,6 +1,6 @@
 package ast 
 
-//abstract syntax tree0 certain details visible in the source code are omitted in the AST
+//abstract syntax tree certain details visible in the source code are omitted in the AST
 // ;, /n, whitespace, comments, braces, bracket and parentheses are not included
 // the AST is a tree of nodes, each node is an instance of a type that implements the Node interface
 
