@@ -3,6 +3,7 @@ package ast
 import (
 	"monkey/token"
 	"bytes"
+	"strings"
 )
 
 // Node represents a node in the Abstract Syntax Tree.
@@ -282,5 +283,35 @@ func (bs *BlockStatement) String() string {
 	for _, s := range bs.Statements {
 		out.WriteString(s.String())
 	}
+	return out.String()
+}
+
+// FunctionLiteral represents a function literal expression.
+// It contains:
+// - Token: the 'fn' token
+// - Parameters: list of parameter identifiers
+// - Body: the function body as a block statement
+type FunctionLiteral struct {
+	Token      token.Token
+	Parameters []*Identifier
+	Body       *BlockStatement
+}
+
+func (fl *FunctionLiteral) expressionNode() {}
+func (fl *FunctionLiteral) TokenLiteral() string { return fl.Token.Literal }
+
+// String returns a string representation of the function literal in the format:
+// "fn(<param1>, <param2>, ...) { <body> }"
+func (fl *FunctionLiteral) String() string {
+	var out bytes.Buffer
+	params := []string{}
+	for _, p := range fl.Parameters {
+		params = append(params, p.String())
+	}
+	out.WriteString(fl.TokenLiteral())
+	out.WriteString("(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(") ")
+	out.WriteString(fl.Body.String())
 	return out.String()
 }

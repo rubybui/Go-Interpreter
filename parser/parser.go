@@ -55,6 +55,7 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.registerPrefix(token.IF, p.parseIfExpression)
 	p.registerPrefix(token.TRUE, p.parseBoolean)
 	p.registerPrefix(token.FALSE, p.parseBoolean)
+	p.registerPrefix(token.FUNCTION, p.parseFunctionLiteral)
 
 	// Initialize infix parse functions
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
@@ -66,6 +67,7 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.registerInfix(token.NOT_EQ, p.parseInfixExpression)
 	p.registerInfix(token.LT, p.parseInfixExpression)
 	p.registerInfix(token.GT, p.parseInfixExpression)
+
 
 	// Read first two tokens
 	p.nextToken()
@@ -417,6 +419,64 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	}
 
 	return block
+}
+
+// parseFunctionParameters parses the parameters of a function literal.
+// It:
+// 1. Handles empty parameter lists
+// 2. Parses the first parameter
+// 3. Parses additional parameters separated by commas
+// 4. Expects a closing parenthesis
+// Returns a slice of parameter identifiers or nil if parsing fails.
+func (p *Parser) parseFunctionParameters() []*ast.Identifier {
+	identifiers := []*ast.Identifier{}
+
+	if p.peekTokenIs(token.RPAREN) {
+		p.nextToken()
+		return identifiers
+	}
+
+	p.nextToken()
+	ident := &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
+	identifiers = append(identifiers, ident)
+
+	for p.peekTokenIs(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		ident := &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
+		identifiers = append(identifiers, ident)
+	}
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	return identifiers
+}
+
+// parseFunctionLiteral parses a function literal expression.
+// It:
+// 1. Creates a FunctionLiteral node
+// 2. Expects an opening parenthesis
+// 3. Parses the parameter list through parseFunctionParameters
+// 4. Expects an opening brace through block statement
+// 5. Parses the function body as a block statement
+// Returns the parsed FunctionLiteral or nil if parsing fails.
+func (p *Parser) parseFunctionLiteral() ast.Expression {
+	lit := &ast.FunctionLiteral{Token: p.currentToken}
+
+	if !p.expectPeek(token.LPAREN) {
+		return nil
+	}
+
+	lit.Parameters = p.parseFunctionParameters()
+
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+
+	lit.Body = p.parseBlockStatement()
+	return lit
 }
 
 // precedences maps token types to their precedence levels.
