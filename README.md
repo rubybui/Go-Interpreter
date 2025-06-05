@@ -47,6 +47,40 @@ The parser implements the following precedence levels (from lowest to highest):
 └── token/        # Token definitions
 ```
 
+## Testing
+The project includes comprehensive test coverage for each package. To run the tests:
+
+### Run all tests
+```bash
+go test ./...
+```
+
+### Run tests for specific packages
+```bash
+# Test lexer package
+go test ./lexer
+
+# Test parser package
+go test ./parser
+
+# Test AST package
+go test ./ast
+```
+
+### Run tests with coverage
+```bash
+# Generate coverage report for all packages
+go test ./... -cover
+
+# Generate coverage report for a specific package
+go test ./lexer -cover
+```
+
+### Run tests with verbose output
+```bash
+go test ./... -v
+```
+
 ## Usage
 [Usage instructions to be added as the project develops]
 
