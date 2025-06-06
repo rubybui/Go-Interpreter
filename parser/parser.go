@@ -67,7 +67,7 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.registerInfix(token.NOT_EQ, p.parseInfixExpression)
 	p.registerInfix(token.LT, p.parseInfixExpression)
 	p.registerInfix(token.GT, p.parseInfixExpression)
-
+	p.registerInfix(token.LPAREN, p.parseCallExpression)
 
 	// Read first two tokens
 	p.nextToken()
@@ -479,6 +479,40 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 	return lit
 }
 
+// parseCallExpression parses a function call expression.
+// It handles expressions like: add(1, 2 * 3, 4 + 5)
+func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
+	exp := &ast.CallExpression{Token: p.currentToken, Function: function}
+	exp.Arguments = p.parseCallArguments()
+	return exp
+}
+
+// parseCallArguments parses the arguments of a function call.
+// It handles comma-separated expressions between parentheses.
+func (p *Parser) parseCallArguments() []ast.Expression {
+	args := []ast.Expression{}
+
+	if p.peekTokenIs(token.RPAREN) {
+		p.nextToken()
+		return args
+	}
+
+	p.nextToken()
+	args = append(args, p.parseExpression(LOWEST))
+
+	for p.peekTokenIs(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		args = append(args, p.parseExpression(LOWEST))
+	}
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	return args
+}
+
 // precedences maps token types to their precedence levels.
 var precedences = map[token.TokenType]int{
 	token.EQ:       EQUALS,
@@ -489,4 +523,5 @@ var precedences = map[token.TokenType]int{
 	token.MINUS:    SUM,
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
+	token.LPAREN: 	CALL,
 }
