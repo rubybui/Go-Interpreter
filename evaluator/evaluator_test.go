@@ -71,10 +71,15 @@ func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
 	return true
 }
 
+// TestEvalBooleanExpression tests the evaluation of boolean expressions.
+// It verifies that the evaluator correctly handles:
+// - Boolean literals (true/false)
+// - Comparison operations (<, >, ==, !=)
+// - Boolean equality operations
 func TestEvalBooleanExpression(t *testing.T) {
 	tests := []struct {
-	input string
-	expected bool
+		input    string
+		expected bool
 	}{
 		{"true", true},
 		{"false", false},
@@ -91,13 +96,13 @@ func TestEvalBooleanExpression(t *testing.T) {
 		{"true == false", false},
 		{"true != false", true},
 		{"false != true", true},
+	}
 
-	}
 	for _, tt := range tests {
-	evaluated := testEval(tt.input)
-	testBooleanObject(t, evaluated, tt.expected)
+		evaluated := testEval(tt.input)
+		testBooleanObject(t, evaluated, tt.expected)
 	}
-	}
+}
 
 // testBooleanObject is a helper function that verifies if an object
 // is a boolean with the expected value.
@@ -118,20 +123,67 @@ func testBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
 	return true
 }
 
+// TestBangOperator tests the evaluation of the bang (!) operator.
+// It verifies that the evaluator correctly handles:
+// - Logical NOT operations on booleans
+// - Logical NOT operations on integers
+// - Double negation
 func TestBangOperator(t *testing.T) {
 	tests := []struct {
-	input string
-	expected bool
+		input    string
+		expected bool
 	}{
-	{"!true", false},
-	{"!false", true},
-{"!5", false},
-{"!!true", true},
-{"!!false", false},
-{"!!5", true},
+		{"!true", false},
+		{"!false", true},
+		{"!5", false},
+		{"!!true", true},
+		{"!!false", false},
+		{"!!5", true},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		testBooleanObject(t, evaluated, tt.expected)
+	}
 }
-for _, tt := range tests {
-evaluated := testEval(tt.input)
-testBooleanObject(t, evaluated, tt.expected)
+
+// TestIfElseExpressions tests the evaluation of if-else expressions.
+// It verifies that the evaluator correctly handles:
+// - If conditions with boolean literals
+// - If conditions with integer literals
+// - If conditions with comparison expressions
+// - If-else conditions
+func TestIfElseExpressions(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{"if (true) { 10 }", 10},
+		{"if (false) { 10 }", nil},
+		{"if (1) { 10 }", 10},
+		{"if (1 < 2) { 10 }", 10},
+		{"if (1 > 2) { 10 }", nil},
+		{"if (1 > 2) { 10 } else { 20 }", 20},
+		{"if (1 < 2) { 10 } else { 20 }", 10},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		integer, ok := tt.expected.(int)
+		if ok {
+			testIntegerObject(t, evaluated, int64(integer))
+		} else {
+			testNullObject(t, evaluated)
+		}
+	}
 }
+
+// testNullObject is a helper function that verifies if an object
+// is NULL. Returns true if the test passes, false otherwise.
+func testNullObject(t *testing.T, obj object.Object) bool {
+	if obj != NULL {
+		t.Errorf("object is not NULL. got=%T (%+v)", obj, obj)
+		return false
+	}
+	return true
 }
