@@ -22,17 +22,34 @@ func Eval(node ast.Node) object.Object {
 		return nativeBoolToBooleanObject(node.Value)
 	case *ast.PrefixExpression:
 		right := Eval(node.Right)
+		if isError(right) {
+			return right
+		}
 		return evalPrefixExpression(node.Operator, right)
 	case *ast.InfixExpression:
 		left := Eval(node.Left)
 		right := Eval(node.Right)
+		if isError(left) {
+			return left
+		}
+		if isError(right) {
+			return right
+		}
 		return evalInfixExpression(node.Operator, left, right)
 	case *ast.BlockStatement:
 		return evalBlockStatement(node)
 	case *ast.IfExpression:
+		condition := Eval(node.Condition)
+		if isError(condition) {
+			return condition
+		}
 		return evalIfExpression(node)
 	case *ast.ReturnStatement:
-		return evalReturnStatements(node)
+		val := Eval(node.ReturnValue)
+		if isError(val) {
+			return val
+		}
+		return &object.ReturnValue{Value: val}
 	case *ast.Program:
 		return evalProgram(node)
 
@@ -193,3 +210,10 @@ func nativeBoolToBooleanObject(input bool) *object.Boolean {
 func newError(format string, a ...interface{}) *object.Error {
 	return &object.Error{Message: fmt.Sprintf(format, a...)}
 }
+
+func isError(obj object.Object) bool {
+	if obj != nil {
+	return obj.Type() == object.ERROR_OBJ
+	}
+	return false
+	}
