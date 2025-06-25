@@ -293,3 +293,5 @@ func unwrapReturnValue(obj object.Object) object.Object {
 	}
 	return obj
 }
+
+// Garbage Collector actually used GO garbage collector
