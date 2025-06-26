@@ -45,6 +45,7 @@ const (
 	FALSE    TokenType = "FALSE"
 	EQ       = "=="
 	NOT_EQ   = "!="
+	STRING   = "STRING"
 
 )
 
